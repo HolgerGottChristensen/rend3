@@ -1,4 +1,6 @@
 use std::sync::Arc;
+use glam::{Mat3, Mat4};
+use rend3::types::DirectionalLightChange;
 
 fn vertex(pos: [f32; 3]) -> glam::Vec3 {
     glam::Vec3::from(pos)
@@ -158,16 +160,17 @@ fn main() {
     // Create a single directional light
     //
     // We need to keep the directional light handle alive.
-    let _directional_handle = renderer.add_directional_light(rend3::types::DirectionalLight {
+    let directional_handle = renderer.add_directional_light(rend3::types::DirectionalLight {
         color: glam::Vec3::ONE,
         intensity: 10.0,
         // Direction will be normalized
         direction: glam::Vec3::new(-1.0, -4.0, 2.0),
         distance: 400.0,
-        resolution: 2048,
+        resolution: 4096,
     });
 
     let mut resolution = glam::UVec2::new(window_size.width, window_size.height);
+    let mut direction = glam::Vec3::new(-1.0, -1.0, 2.0);
 
     event_loop.run(move |event, _, control| match event {
         // Close button was clicked, we should close.
@@ -196,6 +199,14 @@ fn main() {
         }
         // Render!
         winit::event::Event::MainEventsCleared => {
+
+            direction = Mat3::from_rotation_y(0.01) * direction;
+
+            renderer.update_directional_light(&directional_handle, DirectionalLightChange {
+                direction: Some(direction),
+                ..Default::default()
+            });
+
             // Get a frame
             let frame = surface.get_current_texture().unwrap();
 
